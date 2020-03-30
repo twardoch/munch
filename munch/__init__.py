@@ -539,9 +539,9 @@ def splitnest(d, sep = '.'):
         {'one': {'two': 1, 'three': 2}, 'two': {'one': 3}}
         Non-recursive. Helps munchify so you can do: m.one.two
     """
-    def nest(i,e,v):
+    def nest(i, e, v):
         if len(i)<2:e[i[0]]=v
-        else:nest(i[1:], e.setdefault(i[0], {}),v)
+        else:nest(i[1:], e.setdefault(i[0], {}), v)
     e = dict()
     for i, v in d.items():
         nest(i.split(sep), e, v)
