@@ -28,7 +28,7 @@ from .python3_compat import iterkeys, iteritems, Mapping, u
 __version__ = pkg_resources.get_distribution('munch').version
 VERSION = tuple(map(int, __version__.split('.')[:3]))
 
-__all__ = ('Munch', 'munchify', 'DefaultMunch', 'DefaultFactoryMunch', 'RecursiveMunch', 'unmunchify')
+__all__ = ('Munch', 'munchify', 'DefaultMunch', 'DefaultFactoryMunch', 'RecursiveMunch', 'unmunchify', 'splitnst')
 
 
 
@@ -532,6 +532,20 @@ def unmunchify(x):
 
     return unmunchify_cycles(x)
 
+def splitnest(d, sep = '.'):
+    """ Takes dict where the keys are like 'one.two':
+        d = {'one.two': 1, 'one.three': 2, 'two.one': 3}
+        Splits by sep (default '.') and nests. Returns:
+        {'one': {'two': 1, 'three': 2}, 'two': {'one': 3}}
+        Non-recursive. Helps munchify so you can do: m.one.two
+    """
+    def nest(i,e,v):
+        if len(i)<2:e[i[0]]=v
+        else:nest(i[1:], e.setdefault(i[0], {}),v)
+    e = dict()
+    for i, v in d.items():
+        nest(i.split(sep), e, v)
+    return e
 
 # Serialization
 

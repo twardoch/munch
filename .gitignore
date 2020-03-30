@@ -14,3 +14,4 @@ ChangeLog
 flycheck_*
 *.vscode
 *.code-workspace
+.idea/
