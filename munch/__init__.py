@@ -28,7 +28,7 @@ from .python3_compat import iterkeys, iteritems, Mapping, u
 __version__ = pkg_resources.get_distribution('munch').version
 VERSION = tuple(map(int, __version__.split('.')[:3]))
 
-__all__ = ('Munch', 'munchify', 'DefaultMunch', 'DefaultFactoryMunch', 'unmunchify')
+__all__ = ('Munch', 'munchify', 'DefaultMunch', 'DefaultFactoryMunch', 'RecursiveMunch', 'unmunchify')
 
 
 
@@ -370,6 +370,35 @@ class DefaultFactoryMunch(Munch):
     def __missing__(self, k):
         self[k] = self.default_factory()
         return self[k]
+
+
+class RecursiveMunch(DefaultFactoryMunch):
+    """A Munch that calls an instance of itself to generate values for
+        missing keys.
+
+        >>> b = RecursiveMunch({'hello': 'world!'})
+        >>> b.hello
+        'world!'
+        >>> b.foo
+        RecursiveMunch(RecursiveMunch, {})
+        >>> b.bar.okay = 'hello'
+        >>> b.bar
+        RecursiveMunch(RecursiveMunch, {'okay': 'hello'})
+        >>> b
+        RecursiveMunch(RecursiveMunch, {'hello': 'world!', 'foo': RecursiveMunch(RecursiveMunch, {}),
+        'bar': RecursiveMunch(RecursiveMunch, {'okay': 'hello'})})
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(RecursiveMunch, self).__init__(RecursiveMunch, *args, **kwargs)
+
+    @classmethod
+    def fromDict(cls, d):
+        # pylint: disable=arguments-differ
+        return munchify(d, factory=cls)
+
+    def copy(self):
+        return type(self).fromDict(self)
 
 
 # While we could convert abstract types like Mapping or Iterable, I think
