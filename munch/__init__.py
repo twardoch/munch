@@ -35,8 +35,9 @@ except importlib_metadata.PackageNotFoundError:
     # package is not installed
     __version__ = "0.0.0"
 
+
 try:
-    VERSION = tuple(map(int, __version__.split('.')[:3]))
+    VERSION = tuple(map(int, __version__.split('+')[0].split('.')[:3]))
 except ValueError:
     VERSION = (0, 0, 0)
 
