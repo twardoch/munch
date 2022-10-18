@@ -33,9 +33,12 @@ try:
     __version__ = importlib_metadata.version(__name__)
 except importlib_metadata.PackageNotFoundError:
     # package is not installed
-    pass
+    __version__ = "0.0.0"
 
-VERSION = tuple(map(int, __version__.split('.')[:3]))
+try:
+    VERSION = tuple(map(int, __version__.split('.')[:3]))
+except ValueError:
+    VERSION = (0, 0, 0)
 
 __all__ = ('Munch', 'munchify', 'DefaultMunch', 'DefaultFactoryMunch', 'RecursiveMunch', 'unmunchify')
 
