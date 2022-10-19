@@ -34,3 +34,12 @@ jobs:
       run: python -m build
     - name: Test with Pytest
       run: pytest
+
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+    # Install the testing dependencies from setup.cfg, including pylint
+    - run: pip install .[testing]
+    - run: pylint munch setup.py tests
