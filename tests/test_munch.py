@@ -520,7 +520,7 @@ def test_setitem_dunder_for_subclass():
     def test_class(cls, *args):
         class CustomMunch(cls):
             def __setitem__(self, k, v):
-                super(CustomMunch, self).__setitem__(k, [v] * 2)
+                super().__setitem__(k, [v] * 2)
         custom_munch = CustomMunch(*args, a='foo')
         assert custom_munch.a == ['foo', 'foo']
         regular_dict = {}

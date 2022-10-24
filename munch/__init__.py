@@ -202,7 +202,7 @@ class Munch(dict):
 
             (*) Invertible so long as collection contents are each repr-invertible.
         """
-        return '{0}({1})'.format(self.__class__.__name__, dict.__repr__(self))
+        return f'{self.__class__.__name__}({dict.__repr__(self)})'
 
     def __dir__(self):
         return list(iterkeys(self))
@@ -271,7 +271,7 @@ class AutoMunch(Munch):
         """
         if isinstance(v, Mapping) and not isinstance(v, (AutoMunch, Munch)):
             v = munchify(v, AutoMunch)
-        super(AutoMunch, self).__setattr__(k, v)
+        super().__setattr__(k, v)
 
 
 class DefaultMunch(Munch):
@@ -290,13 +290,13 @@ class DefaultMunch(Munch):
             args = args[1:]
         else:
             default = None
-        super(DefaultMunch, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__default__ = default
 
     def __getattr__(self, k):
         """ Gets key if it exists, otherwise returns the default value."""
         try:
-            return super(DefaultMunch, self).__getattr__(k)
+            return super().__getattr__(k)
         except AttributeError:
             return self.__default__
 
@@ -304,12 +304,12 @@ class DefaultMunch(Munch):
         if k == '__default__':
             object.__setattr__(self, k, v)
         else:
-            super(DefaultMunch, self).__setattr__(k, v)
+            super().__setattr__(k, v)
 
     def __getitem__(self, k):
         """ Gets key if it exists, otherwise returns the default value."""
         try:
-            return super(DefaultMunch, self).__getitem__(k)
+            return super().__getitem__(k)
         except KeyError:
             return self.__default__
 
@@ -339,8 +339,7 @@ class DefaultMunch(Munch):
         return type(self).fromDict(self, default=self.__default__)
 
     def __repr__(self):
-        return '{0}({1!r}, {2})'.format(
-            type(self).__name__, self.__undefined__, dict.__repr__(self))
+        return f'{type(self).__name__}({self.__undefined__!r}, {dict.__repr__(self)})'
 
 
 class DefaultFactoryMunch(Munch):
@@ -358,7 +357,7 @@ class DefaultFactoryMunch(Munch):
     """
 
     def __init__(self, default_factory, *args, **kwargs):
-        super(DefaultFactoryMunch, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.default_factory = default_factory
 
     @classmethod
@@ -371,14 +370,13 @@ class DefaultFactoryMunch(Munch):
 
     def __repr__(self):
         factory = self.default_factory.__name__
-        return '{0}({1}, {2})'.format(
-            type(self).__name__, factory, dict.__repr__(self))
+        return f'{type(self).__name__}({factory}, {dict.__repr__(self)})'
 
     def __setattr__(self, k, v):
         if k == 'default_factory':
             object.__setattr__(self, k, v)
         else:
-            super(DefaultFactoryMunch, self).__setattr__(k, v)
+            super().__setattr__(k, v)
 
     def __missing__(self, k):
         self[k] = self.default_factory()
@@ -403,7 +401,7 @@ class RecursiveMunch(DefaultFactoryMunch):
     """
 
     def __init__(self, *args, **kwargs):
-        super(RecursiveMunch, self).__init__(RecursiveMunch, *args, **kwargs)
+        super().__init__(RecursiveMunch, *args, **kwargs)
 
     @classmethod
     def fromDict(cls, d):
