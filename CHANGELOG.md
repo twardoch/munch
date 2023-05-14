@@ -4,6 +4,17 @@ Changelog
 Next Version
 ------------
 
+3.0.0 (2023-05-14)
+------------------
+
+* Fix munchify for tuples of lists  
+* Require Python >=3.6 and upgrade syntax - thanks @EwoutH
+* Update __init__.py  to work with non standard version - thanks @mboisson
+* Allow importing even when VERSION read fails - thanks @mdornseif and @dangillet
+* Add imports to README  
+* replace pkg_resources with importlib.metadata - thanks @dhellmann  
+* Added RecursiveMunch object - thanks @GuillaumeRochette
+
 2.5.0 (2019-10-30)
 ------------------
 
