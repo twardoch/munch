@@ -1,0 +1,2035 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+munch/
+  __init__.py
+  python3_compat.py
+tests/
+  conftest.py
+  test_munch.py
+  test_readme.py
+  test_yaml.py
+.editorconfig
+.gitignore
+.pylintrc
+.travis.yml
+CHANGELOG.md
+LICENSE.txt
+Makefile
+MANIFEST.in
+README.md
+requirements.txt
+setup.cfg
+setup.py
+tox.ini
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".editorconfig">
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs
+# editorconfig.org
+
+root = true
+
+
+[*]
+indent_style = space
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_size = 4
+</file>
+
+<file path="LICENSE.txt">
+Copyright (c) 2010 David Schoonover
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+</file>
+
+<file path="Makefile">
+default: test
+
+detox-test:
+	detox
+
+travis-test: test
+
+test: env
+	.env/bin/py.test test_munch.py munch --doctest-modules
+
+coverage-test: env
+	.env/bin/coverage run .env/bin/nosetests -w tests
+
+env: .env/.up-to-date
+
+.env/.up-to-date: setup.py Makefile
+	virtualenv .env
+	.env/bin/pip install -e .
+	.env/bin/pip install pytest
+	touch .env/.up-to-date
+
+doc: env
+	.env/bin/python setup.py build_sphinx
+
+.PHONY: doc
+</file>
+
+<file path="MANIFEST.in">
+include LICENSE.txt
+include README.md
+</file>
+
+<file path="requirements.txt">
+six
+</file>
+
+<file path="tests/test_readme.py">
+import doctest
+import os
+import sys
+
+import pytest
+
+import munch
+
+_HERE = os.path.abspath(os.path.dirname(__file__))
+_README_PATH = os.path.join(_HERE, "..", "README.md")
+assert os.path.exists(_README_PATH)
+
+
+@pytest.mark.skipif(
+    sys.version_info[:2] < (3, 6), reason="Requires Python version >= 3.6"
+)
+@pytest.mark.usefixtures("yaml")
+def test_readme():
+    globs = {
+        "print_function": print_function,
+        "munch": munch,
+        "Munch": munch.Munch,
+        "DefaultMunch": munch.DefaultMunch,
+        "DefaultFactoryMunch": munch.DefaultFactoryMunch,
+    }
+    result = doctest.testfile(_README_PATH, module_relative=False, globs=globs)
+    assert not result.failed
+</file>
+
+<file path="README.md">
+[![Build Status](https://travis-ci.org/Infinidat/munch.svg?branch=master)](https://travis-ci.org/Infinidat/munch)
+[![Latest Version](https://img.shields.io/pypi/v/munch.svg)](https://pypi.python.org/pypi/munch/)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/munch.svg)](https://pypi.python.org/pypi/munch/)
+[![Downloads](https://img.shields.io/pypi/dm/munch.svg)](https://pypi.python.org/pypi/munch/)
+
+munch
+==========
+
+munch is a fork of David Schoonover's **Bunch** package, providing similar functionality. 99% of the work was done by him, and the fork was made mainly for lack of responsiveness for fixes and maintenance on the original code.
+
+Munch is a dictionary that supports attribute-style access, a la JavaScript:
+
+```python
+
+>>> b = Munch()
+>>> b.hello = 'world'
+>>> b.hello
+'world'
+>>> b['hello'] += "!"
+>>> b.hello
+'world!'
+>>> b.foo = Munch(lol=True)
+>>> b.foo.lol
+True
+>>> b.foo is b['foo']
+True
+
+```
+
+
+Dictionary Methods
+------------------
+
+A Munch is a subclass of ``dict``; it supports all the methods a ``dict`` does:
+
+```python
+
+>>> list(b.keys())
+['hello', 'foo']
+
+```
+
+Including ``update()``:
+
+```python
+
+>>> b.update({ 'ponies': 'are pretty!' }, hello=42)
+>>> print(repr(b))
+Munch({'hello': 42, 'foo': Munch({'lol': True}), 'ponies': 'are pretty!'})
+
+```
+
+As well as iteration:
+
+```python
+
+>>> [ (k,b[k]) for k in b ]
+[('hello', 42), ('foo', Munch({'lol': True})), ('ponies', 'are pretty!')]
+
+```
+
+And "splats":
+
+```python
+
+>>> "The {knights} who say {ni}!".format(**Munch(knights='lolcats', ni='can haz'))
+'The lolcats who say can haz!'
+
+```
+
+
+Serialization
+-------------
+
+Munches happily and transparently serialize to JSON and YAML.
+
+```python
+
+>>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+>>> import json
+>>> json.dumps(b)
+'{"foo": {"lol": true}, "hello": 42, "ponies": "are pretty!"}'
+
+```
+
+If JSON support is present (``json`` or ``simplejson``), ``Munch`` will have a ``toJSON()`` method which returns the object as a JSON string.
+
+If you have [PyYAML](http://pyyaml.org/wiki/PyYAML) installed, Munch attempts to register itself with the various YAML Representers so that Munches can be transparently dumped and loaded.
+
+```python
+
+>>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+>>> import yaml
+>>> yaml.dump(b)
+'!munch.Munch\nfoo: !munch.Munch\n  lol: true\nhello: 42\nponies: are pretty!\n'
+>>> yaml.safe_dump(b)
+'foo:\n  lol: true\nhello: 42\nponies: are pretty!\n'
+
+```
+
+In addition, Munch instances will have a ``toYAML()`` method that returns the YAML string using ``yaml.safe_dump()``. This method also replaces ``__str__`` if present, as I find it far more readable. You can revert back to Python's default use of ``__repr__`` with a simple assignment: ``Munch.__str__ = Munch.__repr__``. The Munch class will also have a static method ``Munch.fromYAML()``, which loads a Munch out of a YAML string.
+
+Finally, Munch converts easily and recursively to (``unmunchify()``, ``Munch.toDict()``) and from (``munchify()``, ``Munch.fromDict()``) a normal ``dict``, making it easy to cleanly serialize them in other formats.
+
+
+Default Values
+--------------
+
+``DefaultMunch`` instances return a specific default value when an attribute is missing from the collection. Like ``collections.defaultdict``, the first argument is the value to use for missing keys:
+
+```python
+
+>>> undefined = object()
+>>> b = DefaultMunch(undefined, {'hello': 'world!'})
+>>> b.hello
+'world!'
+>>> b.foo is undefined
+True
+
+```
+
+``DefaultMunch.fromDict()`` also takes the ``default`` argument:
+
+```python
+
+>>> undefined = object()
+>>> b = DefaultMunch.fromDict({'recursively': {'nested': 'value'}}, undefined)
+>>> b.recursively.nested == 'value'
+True
+>>> b.recursively.foo is undefined
+True
+
+```
+
+Or you can use ``DefaultFactoryMunch`` to specify a factory for generating missing attributes. The first argument is the factory:
+
+```python
+
+>>> b = DefaultFactoryMunch(list, {'hello': 'world!'})
+>>> b.hello
+'world!'
+>>> b.foo
+[]
+>>> b.bar.append('hello')
+>>> b.bar
+['hello']
+
+```
+
+
+Miscellaneous
+-------------
+
+* It is safe to ``import *`` from this module. You'll get: ``Munch``, ``DefaultMunch``, ``DefaultFactoryMunch``, ``munchify`` and ``unmunchify``.
+* Ample Tests. Just run ``pip install tox && tox`` from the project root.
+
+Feedback
+--------
+
+Open a ticket / fork the project on [GitHub](http://github.com/Infinidat/munch).
+</file>
+
+<file path="setup.cfg">
+[metadata]
+name = munch
+classifiers =
+    Development Status :: 5 - Production/Stable
+    Intended Audience :: Developers
+    Operating System :: OS Independent
+    Programming Language :: Python
+    Programming Language :: Python :: 2.7
+    Programming Language :: Python :: 3.5
+    Programming Language :: Python :: 3.6
+    Programming Language :: Python :: 3.7
+    Topic :: Software Development
+    Topic :: Software Development :: Libraries
+    Topic :: Utilities
+    License :: OSI Approved :: MIT License
+summary = A dot-accessible dictionary (a la JavaScript objects)
+description-file =
+    README.md
+description-content-type = text/markdown
+license = MIT
+author = Rotem Yaari
+author_email = vmalloc@gmail.com
+url = https://github.com/Infinidat/munch
+
+[extras]
+testing =
+    astroid~=1.5.3; python_version=='2.7'
+    astroid>=2.0; python_version >= '3.4'
+    pylint~=1.7.2; python_version=='2.7'
+    pylint~=2.3.1; python_version >= '3.4'
+    pytest
+    coverage
+yaml =
+    PyYAML>=5.1.0
+
+
+[tool:pytest]
+testpaths = tests
+
+[bdist_wheel]
+universal=1
+</file>
+
+<file path=".pylintrc">
+[MESSAGES CONTROL]
+disable=invalid-name,missing-docstring,too-few-public-methods,no-else-return,unnecessary-comprehension,bad-option-value
+
+[REPORTS]
+reports=no
+
+[FORMAT]
+max-line-length=120
+</file>
+
+<file path="munch/python3_compat.py">
+try:
+    from collections.abc import Mapping  # pylint: disable=unused-import
+except ImportError:
+    # Legacy Python
+    pass  # pylint: disable=unused-import
+</file>
+
+<file path=".travis.yml">
+language: python
+sudo: false
+matrix:
+  include:
+  - python: '2.7'
+    env:
+    - TOXENV=py27-full
+  - python: '3.5'
+    env:
+    - TOXENV=py35-full
+  - python: '3.6'
+    env:
+    - TOXENV=py36-full
+  - python: pypy
+    env:
+    - TOXENV=pypy-full
+  - python: '2.7'
+    env:
+    - TOXENV=py27-no-deps
+  - python: '3.5'
+    env:
+    - TOXENV=py35-no-deps
+  - python: '3.6'
+    env:
+    - TOXENV=py36-no-deps
+  - python: pypy
+    env:
+    - TOXENV=pypy-no-deps
+  - python: '3.6'
+    env:
+    - TOXENV=lint
+install:
+- pip install tox
+script:
+- tox
+after_success: coveralls
+deploy:
+  provider: pypi
+  user: vmalloc
+  password:
+    secure: m3sHHSCl+dhOKz1tT3kWGyLdLX7qUZvCxvnH2OadJZJ8ziG2X319IkqUZWolG6hSO7j4mFb9kK7PxFk81nClLUJpUrgQ4Uamui2qdgFOZBaUH5QVS8ZGvZ85/Faa3YBO4BqyMVY9SG8uNSCWvFFMY61rHBA0rOtS+ZtRyvCy2SQ=
+  distributions: sdist bdist_wheel
+  on:
+    tags: true
+    repo: Infinidat/munch
+    python: '3.6'
+    condition: $TOXENV = py36-no-deps
+</file>
+
+<file path="setup.py">
+from setuptools import setup
+
+setup(
+    setup_requires=["pbr>=3.0", "setuptools>=17.1"],
+    pbr=True,
+    long_description_content_type="text/markdown; charset=UTF-8",
+    keywords=["munch", "dict", "mapping", "container", "collection"],
+)
+</file>
+
+<file path="tests/conftest.py">
+import pytest
+
+import munch
+
+
+@pytest.fixture(name="yaml")
+def yaml_module():
+    try:
+        import yaml  # pylint: disable=import-outside-toplevel
+
+        return yaml
+    except ImportError:
+        pass
+    pytest.skip("Module 'PyYAML' is required")
+
+
+@pytest.fixture(
+    params=[
+        munch.Munch,
+        munch.AutoMunch,
+        munch.DefaultMunch,
+        munch.DefaultFactoryMunch,
+        munch.RecursiveMunch,
+    ]
+)
+def munch_obj(request):
+    cls = request.param
+    args = tuple()
+    if cls == munch.DefaultFactoryMunch:
+        args = args + (lambda: None,)
+    return cls(*args, hello="world", number=5)
+</file>
+
+<file path=".gitignore">
+*.egg-info
+*.pyc
+*.sublime-project
+*.sublime-workspace
+.cache/
+.coverage
+.env
+.tox
+.eggs
+dist/
+AUTHORS
+ChangeLog
+/.pytest_cache
+flycheck_*
+*.vscode
+*.code-workspace
+.idea/
+</file>
+
+<file path="tests/test_yaml.py">
+import pytest
+
+from munch import DefaultMunch, Munch
+
+
+def test_from_yaml(yaml):
+    data = yaml.load(
+        """
+    Flow style: !munch.Munch { Clark: Evans, Brian: Ingerson, Oren: Ben-Kiki }
+    Block style: !munch
+      Clark : Evans
+      Brian : Ingerson
+      Oren  : Ben-Kiki
+    """,
+        Loader=yaml.FullLoader,
+    )
+    assert data == {
+        "Flow style": Munch(Brian="Ingerson", Clark="Evans", Oren="Ben-Kiki"),
+        "Block style": Munch(Brian="Ingerson", Clark="Evans", Oren="Ben-Kiki"),
+    }
+
+
+def test_to_yaml_safe(yaml):
+    b = Munch(foo=["bar", Munch(lol=True)], hello=42)
+    dumped = yaml.safe_dump(b, default_flow_style=True)
+    assert dumped == "{foo: [bar, {lol: true}], hello: 42}\n"
+
+
+def test_to_yaml(yaml):
+    b = Munch(foo=["bar", Munch(lol=True)], hello=42)
+    dumped = yaml.dump(b, default_flow_style=True)
+    assert dumped == "!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\n"
+
+
+def test_toYAML(yaml):
+    b = Munch(foo=["bar", Munch(lol=True)], hello=42)
+    assert (
+        yaml.safe_dump(b, default_flow_style=True)
+        == "{foo: [bar, {lol: true}], hello: 42}\n"
+    )
+    assert b.toYAML(default_flow_style=True) == "{foo: [bar, {lol: true}], hello: 42}\n"
+    assert (
+        yaml.dump(b, default_flow_style=True)
+        == "!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\n"
+    )
+    assert (
+        b.toYAML(Dumper=yaml.Dumper, default_flow_style=True)
+        == "!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\n"
+    )
+
+
+@pytest.mark.usefixtures("yaml")
+def test_fromYAML():
+    # pylint: disable=unidiomatic-typecheck
+    yaml_str = "foo:\n    bar:\n    - 1\n    - 2\n    hello: world\n"
+    obj = Munch.fromYAML(yaml_str)
+    assert type(obj) == Munch
+    assert obj == Munch(foo=Munch(bar=[1, 2], hello="world"))
+    assert obj.toYAML() == yaml_str
+
+
+@pytest.mark.usefixtures("yaml")
+def test_fromYAML_default_munch():
+    # pylint: disable=unidiomatic-typecheck
+    yaml_str = "foo:\n    bar:\n    - 1\n    - 2\n    hello: world\n"
+    default_value = object()
+    obj = DefaultMunch.fromYAML(yaml_str, default_value)
+    assert type(obj) == DefaultMunch
+    assert obj == DefaultMunch(foo=Munch(bar=[1, 2], hello="world"))
+    assert obj["not_exist"] is default_value
+    assert obj.not_exist is default_value
+    assert obj.toYAML() == yaml_str
+</file>
+
+<file path="tox.ini">
+[tox]
+envlist =
+    {py27,py35,py36,pypy}-full
+    {py27,py35,py36,pypy}-no-deps
+    lint
+
+[testenv]
+extras =
+    testing
+    {py27,py35,py36,pypy}-full: yaml
+commands =
+    {py27,py35,py36,pypy}-full: coverage run --source=munch -m pytest
+    {py27,py35,py36,pypy}-no-deps: pytest -k 'not yaml'
+
+[testenv:lint]
+deps =
+    pylint
+commands =
+    pylint munch setup.py tests
+</file>
+
+<file path="tests/test_munch.py">
+# pylint: disable=unnecessary-lambda
+import json
+import pickle
+from collections import namedtuple
+
+import pytest
+
+from munch import (AutoMunch, DefaultFactoryMunch, DefaultMunch, Munch,
+                   munchify, unmunchify)
+
+
+def test_base():
+    b = Munch()
+    b.hello = "world"
+    assert b.hello == "world"
+    b["hello"] += "!"
+    assert b.hello == "world!"
+    b.foo = Munch(lol=True)
+    assert b.foo.lol is True
+    assert b.foo is b["foo"]
+
+    assert sorted(b.keys()) == ["foo", "hello"]
+
+    b.update({"ponies": "are pretty!"}, hello=42)
+    assert b == Munch(
+        {"ponies": "are pretty!", "foo": Munch({"lol": True}), "hello": 42}
+    )
+
+    assert sorted([(k, b[k]) for k in b]) == [
+        ("foo", Munch({"lol": True})),
+        ("hello", 42),
+        ("ponies", "are pretty!"),
+    ]
+
+    format_munch = Munch(knights="lolcats", ni="can haz")
+    assert (
+        "The {knights} who say {ni}!".format(**format_munch)
+        == "The lolcats who say can haz!"
+    )
+
+
+def test_contains():
+    b = Munch(ponies="are pretty!")
+    assert "ponies" in b
+    assert ("foo" in b) is False
+
+    b["foo"] = 42
+    assert "foo" in b
+
+    b.hello = "hai"
+    assert "hello" in b
+
+    b[None] = 123
+    assert None in b
+
+    b[False] = 456
+    assert False in b
+
+
+def test_getattr():
+    b = Munch(bar="baz", lol={})
+
+    with pytest.raises(AttributeError):
+        b.foo  # pylint: disable=pointless-statement
+
+    assert b.bar == "baz"
+    assert getattr(b, "bar") == "baz"
+    assert b["bar"] == "baz"
+    assert b.lol is b["lol"]
+    assert b.lol is getattr(b, "lol")
+
+
+def test_setattr():
+    b = Munch(foo="bar", this_is="useful when subclassing")
+    assert hasattr(b.values, "__call__")
+
+    b.values = "uh oh"
+    assert b.values == "uh oh"
+
+    with pytest.raises(KeyError):
+        b["values"]  # pylint: disable=pointless-statement
+
+
+def test_pickle():
+    b = DefaultMunch.fromDict({"a": "b"})
+    assert pickle.loads(pickle.dumps(b)) == b
+
+
+def test_automunch():
+    b = AutoMunch()
+    b.urmom = {"sez": {"what": "what"}}
+    assert b.urmom.sez.what == "what"  # pylint: disable=no-member
+
+
+def test_delattr():
+    b = Munch(lol=42)
+    del b.lol
+
+    with pytest.raises(KeyError):
+        b["lol"]  # pylint: disable=pointless-statement
+
+    with pytest.raises(AttributeError):
+        b.lol  # pylint: disable=pointless-statement
+
+
+def test_toDict():
+    b = Munch(foo=Munch(lol=True), hello=42, ponies="are pretty!")
+    assert sorted(b.toDict().items()) == [
+        ("foo", {"lol": True}),
+        ("hello", 42),
+        ("ponies", "are pretty!"),
+    ]
+
+
+def test_dict_property():
+    b = Munch(foo=Munch(lol=True), hello=42, ponies="are pretty!")
+    assert sorted(b.__dict__.items()) == [
+        ("foo", {"lol": True}),
+        ("hello", 42),
+        ("ponies", "are pretty!"),
+    ]
+
+
+def test_repr():
+    b = Munch(foo=Munch(lol=True), hello=42, ponies="are pretty!")
+    assert repr(b).startswith("Munch({'")
+    assert "'ponies': 'are pretty!'" in repr(b)
+    assert "'hello': 42" in repr(b)
+    assert "'foo': Munch({'lol': True})" in repr(b)
+    assert "'hello': 42" in repr(b)
+
+    with_spaces = Munch({1: 2, "a b": 9, "c": Munch({"simple": 5})})
+    assert repr(with_spaces).startswith("Munch({")
+    assert "'a b': 9" in repr(with_spaces)
+    assert "1: 2" in repr(with_spaces)
+    assert "'c': Munch({'simple': 5})" in repr(with_spaces)
+
+    assert eval(repr(with_spaces)) == Munch({"a b": 9, 1: 2, "c": Munch({"simple": 5})})  # pylint: disable=eval-used
+
+
+def test_dir():
+    m = Munch(a=1, b=2)
+    assert dir(m) == ["a", "b"]
+
+
+def test_fromDict():
+    b = Munch.fromDict({"urmom": {"sez": {"what": "what"}}})
+    assert b.urmom.sez.what == "what"
+
+
+def test_copy():
+    m = Munch(urmom=Munch(sez=Munch(what="what")))
+    c = m.copy()
+    assert c is not m
+    assert c.urmom is not m.urmom
+    assert c.urmom.sez is not m.urmom.sez
+    assert c.urmom.sez.what == "what"
+    assert c == m
+
+
+def test_munchify():
+    b = munchify({"urmom": {"sez": {"what": "what"}}})
+    assert b.urmom.sez.what == "what"
+
+    b = munchify(
+        {
+            "lol": ("cats", {"hah": "i win again"}),
+            "hello": [{"french": "salut", "german": "hallo"}],
+        }
+    )
+    assert b.hello[0].french == "salut"
+    assert b.lol[1].hah == "i win again"
+
+
+def test_munchify_with_namedtuple():
+    nt = namedtuple("nt", ["prop_a", "prop_b"])
+
+    b = munchify({"top": nt("in named tuple", 3)})
+    assert b.top.prop_a == "in named tuple"
+    assert b.top.prop_b == 3
+
+    b = munchify(
+        {
+            "top": {
+                "middle": nt(
+                    prop_a={"leaf": "should be munchified"},
+                    prop_b={"leaf": "should be munchified"},
+                )
+            }
+        }
+    )
+    assert b.top.middle.prop_a.leaf == "should be munchified"
+    assert b.top.middle.prop_b.leaf == "should be munchified"
+
+
+def test_unmunchify():
+    b = Munch(foo=Munch(lol=True), hello=42, ponies="are pretty!")
+    assert sorted(unmunchify(b).items()) == [
+        ("foo", {"lol": True}),
+        ("hello", 42),
+        ("ponies", "are pretty!"),
+    ]
+
+    b = Munch(
+        foo=["bar", Munch(lol=True)],
+        hello=42,
+        ponies=("are pretty!", Munch(lies="are trouble!")),
+    )
+    assert sorted(unmunchify(b).items()) == [
+        ("foo", ["bar", {"lol": True}]),
+        ("hello", 42),
+        ("ponies", ("are pretty!", {"lies": "are trouble!"})),
+    ]
+
+
+def test_unmunchify_namedtuple():
+    nt = namedtuple("nt", ["prop_a", "prop_b"])
+    b = Munch(
+        foo=Munch(lol=True), hello=nt(prop_a=42, prop_b="yop"), ponies="are pretty!"
+    )
+    assert sorted(unmunchify(b).items()) == [
+        ("foo", {"lol": True}),
+        ("hello", nt(prop_a=42, prop_b="yop")),
+        ("ponies", "are pretty!"),
+    ]
+
+
+def test_toJSON_and_fromJSON():
+    # pylint: disable=unidiomatic-typecheck
+    obj = Munch(foo=Munch(lol=True), hello=42, ponies="are pretty!")
+    obj_json = obj.toJSON()
+    assert json.dumps(obj) == obj_json
+    new_obj = Munch.fromJSON(obj_json)
+    assert type(obj) == Munch
+    assert new_obj == obj
+
+    default_value = object()
+    dm_obj = DefaultMunch.fromJSON(obj_json, default_value)
+    assert type(dm_obj) == DefaultMunch
+    assert dm_obj == obj
+    assert dm_obj["not_exist"] is default_value
+    assert dm_obj.not_exist is default_value
+
+
+@pytest.mark.parametrize("attrname", dir(Munch))
+def test_reserved_attributes(attrname):
+    # Make sure that the default attributes on the Munch instance are
+    # accessible.
+
+    taken_munch = Munch(**{attrname: "abc123"})
+
+    # Make sure that the attribute is determined as in the filled collection...
+    assert attrname in taken_munch
+
+    # ...and that it is available using key access...
+    assert taken_munch[attrname] == "abc123"
+
+    # ...but that it is not available using attribute access.
+    attr = getattr(taken_munch, attrname)
+    assert attr != "abc123"
+
+    empty_munch = Munch()
+
+    # Make sure that the attribute is not seen contained in the empty
+    # collection...
+    assert attrname not in empty_munch
+
+    # ...and that the attr is of the correct original type.
+    attr = getattr(empty_munch, attrname)
+    if attrname == "__doc__":
+        assert isinstance(attr, str)
+    elif attrname in ("__hash__", "__weakref__"):
+        assert attr is None
+    elif attrname == "__module__":
+        assert attr == "munch"
+    elif attrname == "__dict__":
+        assert attr == {}
+    else:
+        assert callable(attr)
+
+
+def test_getattr_default():
+    b = DefaultMunch(bar="baz", lol={})
+    assert b.foo is None
+    assert b["foo"] is None
+
+    assert b.bar == "baz"
+    assert getattr(b, "bar") == "baz"
+    assert b["bar"] == "baz"
+    assert b.lol is b["lol"]
+    assert b.lol is getattr(b, "lol")
+
+    undefined = object()
+    b = DefaultMunch(undefined, bar="baz", lol={})
+    assert b.foo is undefined
+    assert b["foo"] is undefined
+
+
+def test_setattr_default():
+    b = DefaultMunch(foo="bar", this_is="useful when subclassing")
+    assert hasattr(b.values, "__call__")
+
+    b.values = "uh oh"
+    assert b.values == "uh oh"
+    assert b["values"] is None
+
+    assert b.__default__ is None
+    assert "__default__" not in b
+
+
+def test_delattr_default():
+    b = DefaultMunch(lol=42)
+    del b.lol
+
+    assert b.lol is None
+    assert b["lol"] is None
+
+
+def test_pickle_default():
+    b = DefaultMunch.fromDict({"a": "b"})
+    assert pickle.loads(pickle.dumps(b)) == b
+
+
+def test_fromDict_default():
+    undefined = object()
+    b = DefaultMunch.fromDict({"urmom": {"sez": {"what": "what"}}}, undefined)
+    assert b.urmom.sez.what == "what"
+    assert b.urmom.sez.foo is undefined
+
+
+def test_copy_default():
+    undefined = object()
+    m = DefaultMunch.fromDict({"urmom": {"sez": {"what": "what"}}}, undefined)
+    c = m.copy()
+    assert c is not m
+    assert c.urmom is not m.urmom
+    assert c.urmom.sez is not m.urmom.sez
+    assert c.urmom.sez.what == "what"
+    assert c == m
+    assert c.urmom.sez.foo is undefined
+    assert c.urmom.sez.__undefined__ is undefined
+
+
+def test_munchify_default():
+    undefined = object()
+    b = munchify(
+        {"urmom": {"sez": {"what": "what"}}}, lambda d: DefaultMunch(undefined, d)
+    )
+    assert b.urmom.sez.what == "what"
+    assert b.urdad is undefined
+    assert b.urmom.sez.ni is undefined
+
+
+def test_repr_default():
+    b = DefaultMunch(foo=DefaultMunch(lol=True), ponies="are pretty!")
+    assert repr(b).startswith("DefaultMunch(None, {'")
+    assert "'ponies': 'are pretty!'" in repr(b)
+
+
+def test_getattr_default_factory():
+    b = DefaultFactoryMunch(lambda: None, bar="baz", lol={})
+    assert b.foo is None
+    assert b["foo"] is None
+
+    assert b.bar == "baz"
+    assert getattr(b, "bar") == "baz"
+    assert b["bar"] == "baz"
+    assert b.lol is b["lol"]
+    assert b.lol is getattr(b, "lol")
+
+    undefined = object()
+    def default():
+        return undefined
+    b = DefaultFactoryMunch(default, bar="baz", lol={})
+    assert b.foo is undefined
+    assert b["foo"] is undefined
+
+    def default():
+        return object()
+    b = DefaultFactoryMunch(default, bar="baz", lol={})
+    assert b.foo is not b.baz
+    assert b.foo is b["foo"]
+    assert b.foobar is b.foobar
+
+    b = DefaultFactoryMunch(list)
+    assert b.foo == []
+    b.foo.append("bar")
+    assert b.foo == ["bar"]
+    assert b.default_factory is list
+
+
+def test_setattr_default_factory():
+    b = DefaultFactoryMunch(lambda: None, foo="bar", this_is="useful when subclassing")
+    assert hasattr(b.values, "__call__")
+
+    b.values = "uh oh"
+    assert b.values == "uh oh"
+    assert b["values"] is None
+
+    assert b.default_factory() is None
+    assert "default_factory" not in b
+
+
+def test_delattr_default_factory():
+    b = DefaultFactoryMunch(lambda: None, lol=42)
+    del b.lol
+
+    assert b.lol is None
+    assert b["lol"] is None
+
+
+def test_fromDict_default_factory():
+    obj = object()
+    def undefined():
+        return obj
+    b = DefaultFactoryMunch.fromDict({"urmom": {"sez": {"what": "what"}}}, undefined)
+    assert b.urmom.sez.what == "what"
+    assert b.urmom.sez.foo is undefined()
+
+
+def test_copy_default_factory():
+    def undefined():
+        return object()
+    m = DefaultFactoryMunch.fromDict({"urmom": {"sez": {"what": "what"}}}, undefined)
+    c = m.copy()
+    assert c is not m
+    assert c.urmom is not m.urmom
+    assert c.urmom.sez is not m.urmom.sez
+    assert c.urmom.sez.what == "what"
+    assert c == m
+
+
+def test_munchify_default_factory():
+    def undefined():
+        return object()
+    b = munchify(
+        {"urmom": {"sez": {"what": "what"}}},
+        lambda d: DefaultFactoryMunch(undefined, d),
+    )
+    assert b.urmom.sez.what == "what"
+    assert b.urdad is not undefined()
+    assert b.urmom.sez.ni is not b.urdad
+
+
+def test_munchify_cycle():
+    # dict1 -> dict2 -> dict1
+    x = dict(id="x")
+    y = dict(x=x, id="y")
+    x["y"] = y
+
+    m = munchify(x)
+    assert m.id == "x"
+    assert m.y.id == "y"
+    assert m.y.x is m
+
+    # dict -> list -> dict
+    x = dict(id="x")
+    y = ["y", x]
+    x["y"] = y
+
+    m = munchify(x)
+    assert m.id == "x"
+    assert m.y[0] == "y"
+    assert m.y[1] is m
+
+    # dict -> tuple -> dict
+    x = dict(id="x")
+    y = ("y", x)
+    x["y"] = y
+
+    m = munchify(x)
+    assert m.id == "x"
+    assert m.y[0] == "y"
+    assert m.y[1] is m
+
+    # dict1 -> list -> dict2 -> list
+    z = dict(id="z")
+    y = ["y", z]
+    z["y"] = y
+    x = dict(id="x", y=y)
+
+    m = munchify(x)
+    assert m.id == "x"
+    assert m.y[0] == "y"
+    assert m.y[1].id == "z"
+    assert m.y[1].y is m.y
+
+    # dict1 -> tuple -> dict2 -> tuple
+    z = dict(id="z")
+    y = ("y", z)
+    z["y"] = y
+    x = dict(id="x", y=y)
+
+    m = munchify(x)
+    assert m.id == "x"
+    assert m.y[0] == "y"
+    assert m.y[1].id == "z"
+    assert m.y[1].y is m.y
+
+
+def test_unmunchify_cycle():
+    # munch -> munch -> munch
+    x = Munch(id="x")
+    y = Munch(x=x, id="y")
+    x.y = y
+
+    d = unmunchify(x)
+    assert d["id"] == "x"
+    assert d["y"]["id"] == "y"
+    assert d["y"]["x"] is d
+
+    # munch -> list -> munch
+    x = Munch(id="x")
+    y = ["y", x]
+    x.y = y
+
+    d = unmunchify(x)
+    assert d["id"] == "x"
+    assert d["y"][0] == "y"
+    assert d["y"][1] is d
+
+    # munch -> tuple -> munch
+    x = Munch(id="x")
+    y = ("y", x)
+    x.y = y
+
+    d = unmunchify(x)
+    assert d["id"] == "x"
+    assert d["y"][0] == "y"
+    assert d["y"][1] is d
+
+    # munch1 -> list -> munch2 -> list
+    z = Munch(id="z")
+    y = ["y", z]
+    z.y = y
+    x = Munch(id="x", y=y)
+
+    d = unmunchify(x)
+    assert d["id"] == "x"
+    assert d["y"][0] == "y"
+    assert d["y"][1]["id"] == "z"
+    assert d["y"][1]["y"] is d["y"]
+
+    # munch1 -> tuple -> munch2 -> tuple
+    z = Munch(id="z")
+    y = ("y", z)
+    z.y = y
+    x = Munch(id="x", y=y)
+
+    d = unmunchify(x)
+    assert d["id"] == "x"
+    assert d["y"][0] == "y"
+    assert d["y"][1]["id"] == "z"
+    assert d["y"][1]["y"] is d["y"]
+
+
+def test_repr_default_factory():
+    b = DefaultFactoryMunch(
+        list, foo=DefaultFactoryMunch(list, lol=True), ponies="are pretty!"
+    )
+    assert repr(b).startswith("DefaultFactoryMunch(list, {'")
+    assert "'ponies': 'are pretty!'" in repr(b)
+
+    assert eval(repr(b)) == b  # pylint: disable=eval-used
+
+
+def test_pickling_unpickling_nested():
+    m = {"a": {"b": "c"}}
+    m = munchify(m)
+    assert m == Munch({"a": Munch({"b": "c"})})
+    assert isinstance(m.a, Munch)
+    result = pickle.loads(pickle.dumps(m))
+    assert result == m
+    assert isinstance(result.a, Munch)
+
+
+def test_setitem_dunder_for_subclass():
+    def test_class(cls, *args):
+        class CustomMunch(cls):
+            def __setitem__(self, k, v):
+                super().__setitem__(k, [v] * 2)
+
+        custom_munch = CustomMunch(*args, a="foo")
+        assert custom_munch.a == ["foo", "foo"]
+        regular_dict = {}
+        regular_dict.update(custom_munch)
+        assert regular_dict["a"] == ["foo", "foo"]
+        assert repr(regular_dict) == "{'a': ['foo', 'foo']}"
+        custom_munch.setdefault("bar", "baz")
+        assert custom_munch.bar == ["baz", "baz"]
+
+    test_class(Munch)
+    test_class(DefaultFactoryMunch, list)
+    test_class(DefaultMunch, 42)
+
+
+def test_getitem_dunder_for_subclass():
+    class CustomMunch(Munch):
+        def __getitem__(self, k):
+            return 42
+
+    custom_munch = CustomMunch(a="foo")
+    custom_munch.update({"b": 1})
+    assert custom_munch.a == 42
+    assert custom_munch.get("b") == 42
+    assert custom_munch.copy() == Munch(a=42, b=42)
+
+
+@pytest.mark.usefixtures("yaml")
+def test_get_default_value(munch_obj):
+    assert munch_obj.get("fake_key", "default_value") == "default_value"
+    assert isinstance(munch_obj.toJSON(), str)
+    assert isinstance(munch_obj.toYAML(), str)
+    munch_obj.copy()
+    data = munch_obj.toDict()
+    munch_cls = type(munch_obj)
+    kwargs = (
+        {}
+        if munch_cls != DefaultFactoryMunch
+        else {"default_factory": munch_obj.default_factory}
+    )
+    munch_cls.fromDict(data, **kwargs)
+</file>
+
+<file path="CHANGELOG.md">
+Changelog
+=========
+
+Next Version
+------------
+
+2.5.0 (2019-10-30)
+------------------
+
+* Support ``fromJSON`` classmethod for all Munch subclasses (PR [#55](https://github.com/Infinidat/munch/pull/55))
+* Fix return value of DefaultMunch and DefaultFactoryMunch's get method (fixes [#53](https://github.com/Infinidat/munch/issues/53))
+* Support ``fromYAML`` classmethod for all Munch subclasses (PR [#52](https://github.com/Infinidat/munch/pull/52) fixes [#34](https://github.com/Infinidat/munch/issues/34)
+
+2.4.0 (2019-10-29)
+------------------
+
+* Remove usage of deprecated API: Add default loader to yaml loads (PR [#51](https://github.com/Infinidat/munch/pull/51))
+* Switch to PBR #49 (PR [#49](https://github.com/Infinidat/munch/pull/49))
+* Add constructors to all PyYAML loaders (PR [#47](https://github.com/Infinidat/munch/pull/47))
+* Fix namedtuple handling (PR [#46](https://github.com/Infinidat/munch/pull/46) - thanks @atleta)
+* Correctly handle object cycles in munchify and unmunchify (PR [#41](https://github.com/Infinidat/munch/pull/41) - thanks @airbornemint)
+* Improve subclassing behavior (PR [#38](https://github.com/Infinidat/munch/pull/38) - thanks @JosePVB)
+
+2.3.2 (2018-05-06)
+------------------
+
+* Limit travis deployment conditions
+* Build python wheels (PR [#32](https://github.com/Infinidat/munch/pull/32) - thanks @pabelanger)
+
+2.3.1 (2018-04-11)
+------------------
+
+* Avoid running yaml tests when in no-deps environment
+* Use flat dicts in ``__getstate__`` (closes [#32](https://github.com/Infinidat/munch/issues/30) - thanks @harlowja)
+
+2.3.0 (2018-04-09)
+------------------
+
+* Remove default from constructor and fromDict, Make DefaultFactoryMunch which lets users provide a factory to generate missing values (PR [#28](https://github.com/Infinidat/munch/pull/28) - thanks @ekuecks)
+* ``__setattr__`` will now ``munchify()`` any provided dict (PR [#27](https://github.com/Infinidat/munch/pulls/27) - thanks @kbni)
+* Implement the pickling interface (PR [#23](https://github.com/Infinidat/munch/pulls/23) & [#25](https://github.com/Infinidat/munch/pulls/25) - thanks @JamshedVesuna)
+* Drop support for Python 2.6, 3.3, 3.4
+* Add ``__dict__`` property that calls ``toDict()`` (PR [#20](https://github.com/Infinidat/munch/pulls/20) - thanks @bobh66)
+
+2.2.0 (2017-07-27)
+------------------
+
+* Fix for Python 2.6: str.format must field names
+* Changed ``__repr__`` to use str.format instead of x % y
+* Added DefaultMunch, which returns a special value for missing attributes (PR [#16](https://github.com/Infinidat/munch/pulls/16) - thanks @z0u)
+
+2.1.1 (2017-03-20)
+------------------
+
+* Fix python 3 compatibility to work with IronPython (fixes [#13](https://github.com/Infinidat/munch/issues/13) - thanks @yiyuan1840)
+* Deploy from Travis
+* Add python 3.6
+
+2.1.0 (2017-01-10)
+------------------
+
+* Implement copy method (fixes [#10](https://github.com/Infinidat/munch/issues/10))
+* Fix ``__contains__`` returning True for Munch’s default attributes (PR [#7](https://github.com/Infinidat/munch/pull/7) - thanks @jmagnusson)
+
+2.0.4 (2015-11-03)
+------------------
+
+* Fixed String representation of objects with keys that have spaces (PR [#4](https://github.com/Infinidat/munch/pull/4))
+
+2.0.3 (2015-10-02)
+------------------
+
+* Python 3.5 support
+* Test against Python 3.4
+* Add support for running ``dir()`` on munches
+
+2.0.2 (2014-01-16)
+------------------
+
+* Fix packaging manifest
+
+2.0.1 (2014-01-16)
+------------------
+
+* Rename to Munch
+* Fix Py3 compatibility check
+* Drop Python 3.2 support, add 3.3
+
+2.0.0 (2014-01-16)
+------------------
+
+* Initial release: Forking bunch --> infi.bunch.
+</file>
+
+<file path="munch/__init__.py">
+"""Munch is a subclass of dict with attribute-style access.
+
+>>> b = Munch()
+>>> b.hello = 'world'
+>>> b.hello
+'world'
+>>> b['hello'] += "!"
+>>> b.hello
+'world!'
+>>> b.foo = Munch(lol=True)
+>>> b.foo.lol
+True
+>>> b.foo is b['foo']
+True
+
+It is safe to import * from this module:
+
+    __all__ = ('Munch', 'munchify','unmunchify')
+
+un/munchify provide dictionary conversion; Munches can also be
+converted via Munch.to/fromDict().
+"""
+
+import pkg_resources
+
+from .python3_compat import Mapping, iteritems, iterkeys, u
+
+__version__ = pkg_resources.get_distribution("munch").version
+VERSION = tuple(map(int, __version__.split(".")[:3]))
+
+__all__ = (
+    "Munch",
+    "munchify",
+    "DefaultMunch",
+    "DefaultFactoryMunch",
+    "RecursiveMunch",
+    "unmunchify",
+    "splitnest",
+)
+
+
+class Munch(dict):
+    """A dictionary that provides attribute-style access.
+
+    >>> b = Munch()
+    >>> b.hello = 'world'
+    >>> b.hello
+    'world'
+    >>> b['hello'] += "!"
+    >>> b.hello
+    'world!'
+    >>> b.foo = Munch(lol=True)
+    >>> b.foo.lol
+    True
+    >>> b.foo is b['foo']
+    True
+
+    A Munch is a subclass of dict; it supports all the methods a dict does...
+
+    >>> sorted(b.keys())
+    ['foo', 'hello']
+
+    Including update()...
+
+    >>> b.update({ 'ponies': 'are pretty!' }, hello=42)
+    >>> print (repr(b))
+    Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
+
+    As well as iteration...
+
+    >>> sorted([ (k,b[k]) for k in b ])
+    [('foo', Munch({'lol': True})), ('hello', 42), ('ponies', 'are pretty!')]
+
+    And "splats".
+
+    >>> "The {knights} who say {ni}!".format(**Munch(knights='lolcats', ni='can haz'))
+    'The lolcats who say can haz!'
+
+    See unmunchify/Munch.toDict, munchify/Munch.fromDict for notes about conversion.
+    """
+
+    def __init__(self, *args, **kwargs):  # pylint: disable=super-init-not-called
+        self.update(*args, **kwargs)
+
+    # only called if k not found in normal places
+    def __getattr__(self, k):
+        """Gets key if it exists, otherwise throws AttributeError.
+
+        nb. __getattr__ is only called if key is not found in normal places.
+
+        >>> b = Munch(bar='baz', lol={})
+        >>> b.foo
+        Traceback (most recent call last):
+            ...
+        AttributeError: foo
+
+        >>> b.bar
+        'baz'
+        >>> getattr(b, 'bar')
+        'baz'
+        >>> b['bar']
+        'baz'
+
+        >>> b.lol is b['lol']
+        True
+        >>> b.lol is getattr(b, 'lol')
+        True
+        """
+        try:
+            # Throws exception if not in prototype chain
+            return object.__getattribute__(self, k)
+        except AttributeError:
+            try:
+                return self[k]
+            except KeyError:
+                raise AttributeError(k)
+
+    def __setattr__(self, k, v):
+        """Sets attribute k if it exists, otherwise sets key k. A KeyError
+        raised by set-item (only likely if you subclass Munch) will
+        propagate as an AttributeError instead.
+
+        >>> b = Munch(foo='bar', this_is='useful when subclassing')
+        >>> hasattr(b.values, '__call__')
+        True
+        >>> b.values = 'uh oh'
+        >>> b.values
+        'uh oh'
+        >>> b['values']
+        Traceback (most recent call last):
+            ...
+        KeyError: 'values'
+        """
+        try:
+            # Throws exception if not in prototype chain
+            object.__getattribute__(self, k)
+        except AttributeError:
+            try:
+                self[k] = v
+            except:
+                raise AttributeError(k)
+        else:
+            object.__setattr__(self, k, v)
+
+    def __delattr__(self, k):
+        """Deletes attribute k if it exists, otherwise deletes key k. A KeyError
+        raised by deleting the key--such as when the key is missing--will
+        propagate as an AttributeError instead.
+
+        >>> b = Munch(lol=42)
+        >>> del b.lol
+        >>> b.lol
+        Traceback (most recent call last):
+            ...
+        AttributeError: lol
+        """
+        try:
+            # Throws exception if not in prototype chain
+            object.__getattribute__(self, k)
+        except AttributeError:
+            try:
+                del self[k]
+            except KeyError:
+                raise AttributeError(k)
+        else:
+            object.__delattr__(self, k)
+
+    def toDict(self):
+        """Recursively converts a munch back into a dictionary.
+
+        >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+        >>> sorted(b.toDict().items())
+        [('foo', {'lol': True}), ('hello', 42), ('ponies', 'are pretty!')]
+
+        See unmunchify for more info.
+        """
+        return unmunchify(self)
+
+    @property
+    def __dict__(self):
+        return self.toDict()
+
+    def __repr__(self):
+        """Invertible* string-form of a Munch.
+
+        >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+        >>> print (repr(b))
+        Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
+        >>> eval(repr(b))
+        Munch({'ponies': 'are pretty!', 'foo': Munch({'lol': True}), 'hello': 42})
+
+        >>> with_spaces = Munch({1: 2, 'a b': 9, 'c': Munch({'simple': 5})})
+        >>> print (repr(with_spaces))
+        Munch({'a b': 9, 1: 2, 'c': Munch({'simple': 5})})
+        >>> eval(repr(with_spaces))
+        Munch({'a b': 9, 1: 2, 'c': Munch({'simple': 5})})
+
+        (*) Invertible so long as collection contents are each repr-invertible.
+        """
+        return f"{self.__class__.__name__}({dict.__repr__(self)})"
+
+    def __dir__(self):
+        return list(iterkeys(self))
+
+    def __getstate__(self):
+        """Implement a serializable interface used for pickling.
+
+        See https://docs.python.org/3.6/library/pickle.html.
+        """
+        return {k: v for k, v in self.items()}
+
+    def __setstate__(self, state):
+        """Implement a serializable interface used for pickling.
+
+        See https://docs.python.org/3.6/library/pickle.html.
+        """
+        self.clear()
+        self.update(state)
+
+    __members__ = __dir__  # for python2.x compatibility
+
+    @classmethod
+    def fromDict(cls, d):
+        """Recursively transforms a dictionary into a Munch via copy.
+
+        >>> b = Munch.fromDict({'urmom': {'sez': {'what': 'what'}}})
+        >>> b.urmom.sez.what
+        'what'
+
+        See munchify for more info.
+        """
+        return munchify(d, cls)
+
+    def copy(self):
+        return type(self).fromDict(self)
+
+    def update(self, *args, **kwargs):
+        """
+        Override built-in method to call custom __setitem__ method that may
+        be defined in subclasses.
+        """
+        for k, v in iteritems(dict(*args, **kwargs)):
+            self[k] = v
+
+    def get(self, k, d=None):
+        """
+        D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.
+        """
+        if k not in self:
+            return d
+        return self[k]
+
+    def setdefault(self, k, d=None):
+        """
+        D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D
+        """
+        if k not in self:
+            self[k] = d
+        return self[k]
+
+
+class AutoMunch(Munch):
+    def __setattr__(self, k, v):
+        """Works the same as Munch.__setattr__ but if you supply
+        a dictionary as value it will convert it to another Munch.
+        """
+        if isinstance(v, Mapping) and not isinstance(v, (AutoMunch, Munch)):
+            v = munchify(v, AutoMunch)
+        super().__setattr__(k, v)
+
+
+class DefaultMunch(Munch):
+    """
+    A Munch that returns a user-specified value for missing keys.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Construct a new DefaultMunch. Like collections.defaultdict, the
+        first argument is the default value; subsequent arguments are the
+        same as those for dict.
+        """
+        # Mimic collections.defaultdict constructor
+        if args:
+            default = args[0]
+            args = args[1:]
+        else:
+            default = None
+        super().__init__(*args, **kwargs)
+        self.__default__ = default
+
+    def __getattr__(self, k):
+        """Gets key if it exists, otherwise returns the default value."""
+        try:
+            return super().__getattr__(k)
+        except AttributeError:
+            return self.__default__
+
+    def __setattr__(self, k, v):
+        if k == "__default__":
+            object.__setattr__(self, k, v)
+        else:
+            super().__setattr__(k, v)
+
+    def __getitem__(self, k):
+        """Gets key if it exists, otherwise returns the default value."""
+        try:
+            return super().__getitem__(k)
+        except KeyError:
+            return self.__default__
+
+    def __getstate__(self):
+        """Implement a serializable interface used for pickling.
+
+        See https://docs.python.org/3.6/library/pickle.html.
+        """
+        return (self.__default__, {k: v for k, v in self.items()})
+
+    def __setstate__(self, state):
+        """Implement a serializable interface used for pickling.
+
+        See https://docs.python.org/3.6/library/pickle.html.
+        """
+        self.clear()
+        default, state_dict = state
+        self.update(state_dict)
+        self.__default__ = default
+
+    @classmethod
+    def fromDict(cls, d, default=None):
+        # pylint: disable=arguments-differ
+        return munchify(d, factory=lambda d_: cls(default, d_))
+
+    def copy(self):
+        return type(self).fromDict(self, default=self.__default__)
+
+    def __repr__(self):
+        return "{}({!r}, {})".format(
+            type(self).__name__, self.__undefined__, dict.__repr__(self)
+        )
+
+
+class DefaultFactoryMunch(Munch):
+    """A Munch that calls a user-specified function to generate values for
+    missing keys like collections.defaultdict.
+
+    >>> b = DefaultFactoryMunch(list, {'hello': 'world!'})
+    >>> b.hello
+    'world!'
+    >>> b.foo
+    []
+    >>> b.bar.append('hello')
+    >>> b.bar
+    ['hello']
+    """
+
+    def __init__(self, default_factory, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.default_factory = default_factory
+
+    @classmethod
+    def fromDict(cls, d, default_factory):
+        # pylint: disable=arguments-differ
+        return munchify(d, factory=lambda d_: cls(default_factory, d_))
+
+    def copy(self):
+        return type(self).fromDict(self, default_factory=self.default_factory)
+
+    def __repr__(self):
+        factory = self.default_factory.__name__
+        return f"{type(self).__name__}({factory}, {dict.__repr__(self)})"
+
+    def __setattr__(self, k, v):
+        if k == "default_factory":
+            object.__setattr__(self, k, v)
+        else:
+            super().__setattr__(k, v)
+
+    def __missing__(self, k):
+        self[k] = self.default_factory()
+        return self[k]
+
+
+class RecursiveMunch(DefaultFactoryMunch):
+    """A Munch that calls an instance of itself to generate values for
+    missing keys.
+
+    >>> b = RecursiveMunch({'hello': 'world!'})
+    >>> b.hello
+    'world!'
+    >>> b.foo
+    RecursiveMunch(RecursiveMunch, {})
+    >>> b.bar.okay = 'hello'
+    >>> b.bar
+    RecursiveMunch(RecursiveMunch, {'okay': 'hello'})
+    >>> b
+    RecursiveMunch(RecursiveMunch, {'hello': 'world!', 'foo': RecursiveMunch(RecursiveMunch, {}),
+    'bar': RecursiveMunch(RecursiveMunch, {'okay': 'hello'})})
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(RecursiveMunch, *args, **kwargs)
+
+    @classmethod
+    def fromDict(cls, d):
+        # pylint: disable=arguments-differ
+        return munchify(d, factory=cls)
+
+    def copy(self):
+        return type(self).fromDict(self)
+
+
+# While we could convert abstract types like Mapping or Iterable, I think
+# munchify is more likely to "do what you mean" if it is conservative about
+# casting (ex: isinstance(str,Iterable) == True ).
+#
+# Should you disagree, it is not difficult to duplicate this function with
+# more aggressive coercion to suit your own purposes.
+
+
+def munchify(x, factory=Munch):
+    """Recursively transforms a dictionary into a Munch via copy.
+
+    >>> b = munchify({'urmom': {'sez': {'what': 'what'}}})
+    >>> b.urmom.sez.what
+    'what'
+
+    munchify can handle intermediary dicts, lists and tuples (as well as
+    their subclasses), but ymmv on custom datatypes.
+
+    >>> b = munchify({ 'lol': ('cats', {'hah':'i win again'}),
+    ...         'hello': [{'french':'salut', 'german':'hallo'}] })
+    >>> b.hello[0].french
+    'salut'
+    >>> b.lol[1].hah
+    'i win again'
+
+    nb. As dicts are not hashable, they cannot be nested in sets/frozensets.
+    """
+    # Munchify x, using `seen` to track object cycles
+    seen = dict()
+
+    def munchify_cycles(obj):
+        # If we've already begun munchifying obj, just return the already-created munchified obj
+        try:
+            return seen[id(obj)]
+        except KeyError:
+            pass
+
+        # Otherwise, first partly munchify obj (but without descending into any lists or dicts) and save that
+        seen[id(obj)] = partial = pre_munchify(obj)
+        # Then finish munchifying lists and dicts inside obj (reusing munchified obj if cycles are encountered)
+        return post_munchify(partial, obj)
+
+    def pre_munchify(obj):
+        # Here we return a skeleton of munchified obj, which is enough to save for later (in case
+        # we need to break cycles) but it needs to filled out in post_munchify
+        if isinstance(obj, Mapping):
+            return factory({})
+        elif isinstance(obj, list):
+            return type(obj)()
+        elif isinstance(obj, tuple):
+            type_factory = getattr(obj, "_make", type(obj))
+            return type_factory(munchify_cycles(item) for item in obj)
+        else:
+            return obj
+
+    def post_munchify(partial, obj):
+        # Here we finish munchifying the parts of obj that were deferred by pre_munchify because they
+        # might be involved in a cycle
+        if isinstance(obj, Mapping):
+            partial.update((k, munchify_cycles(obj[k])) for k in iterkeys(obj))
+        elif isinstance(obj, list):
+            partial.extend(munchify_cycles(item) for item in obj)
+        elif isinstance(obj, tuple):
+            for item_partial, item in zip(partial, obj):
+                post_munchify(item_partial, item)
+
+        return partial
+
+    return munchify_cycles(x)
+
+
+def unmunchify(x):
+    """Recursively converts a Munch into a dictionary.
+
+    >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+    >>> sorted(unmunchify(b).items())
+    [('foo', {'lol': True}), ('hello', 42), ('ponies', 'are pretty!')]
+
+    unmunchify will handle intermediary dicts, lists and tuples (as well as
+    their subclasses), but ymmv on custom datatypes.
+
+    >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42,
+    ...         ponies=('are pretty!', Munch(lies='are trouble!')))
+    >>> sorted(unmunchify(b).items()) #doctest: +NORMALIZE_WHITESPACE
+    [('foo', ['bar', {'lol': True}]), ('hello', 42), ('ponies', ('are pretty!', {'lies': 'are trouble!'}))]
+
+    nb. As dicts are not hashable, they cannot be nested in sets/frozensets.
+    """
+
+    # Munchify x, using `seen` to track object cycles
+    seen = dict()
+
+    def unmunchify_cycles(obj):
+        # If we've already begun unmunchifying obj, just return the already-created unmunchified obj
+        try:
+            return seen[id(obj)]
+        except KeyError:
+            pass
+
+        # Otherwise, first partly unmunchify obj (but without descending into any lists or dicts) and save that
+        seen[id(obj)] = partial = pre_unmunchify(obj)
+        # Then finish unmunchifying lists and dicts inside obj (reusing unmunchified obj if cycles are encountered)
+        return post_unmunchify(partial, obj)
+
+    def pre_unmunchify(obj):
+        # Here we return a skeleton of unmunchified obj, which is enough to save for later (in case
+        # we need to break cycles) but it needs to filled out in post_unmunchify
+        if isinstance(obj, Mapping):
+            return dict()
+        elif isinstance(obj, list):
+            return type(obj)()
+        elif isinstance(obj, tuple):
+            type_factory = getattr(obj, "_make", type(obj))
+            return type_factory(unmunchify_cycles(item) for item in obj)
+        else:
+            return obj
+
+    def post_unmunchify(partial, obj):
+        # Here we finish unmunchifying the parts of obj that were deferred by pre_unmunchify because they
+        # might be involved in a cycle
+        if isinstance(obj, Mapping):
+            partial.update((k, unmunchify_cycles(obj[k])) for k in iterkeys(obj))
+        elif isinstance(obj, list):
+            partial.extend(unmunchify_cycles(v) for v in obj)
+        elif isinstance(obj, tuple):
+            for value_partial, value in zip(partial, obj):
+                post_unmunchify(value_partial, value)
+
+        return partial
+
+    return unmunchify_cycles(x)
+
+
+def splitnest(d, sep="."):
+    """Takes dict where the keys are like 'one.two':
+    d = {'one.two': 1, 'one.three': 2, 'two.one': 3}
+    Splits by sep (default '.') and nests. Returns:
+    {'one': {'two': 1, 'three': 2}, 'two': {'one': 3}}
+    Non-recursive. Helps munchify so you can do: m.one.two
+    """
+
+    def nest(i, e, v):
+        if len(i) < 2:
+            e[i[0]] = v
+        else:
+            nest(i[1:], e.setdefault(i[0], {}), v)
+
+    e = dict()
+    for i, v in d.items():
+        nest(i.split(sep), e, v)
+    return e
+
+
+# Serialization
+
+try:
+    try:
+        import json
+    except ImportError:
+        import simplejson as json
+
+    def toJSON(self, **options):
+        """Serializes this Munch to JSON. Accepts the same keyword options as `json.dumps()`.
+
+        >>> b = Munch(foo=Munch(lol=True), hello=42, ponies='are pretty!')
+        >>> json.dumps(b) == b.toJSON()
+        True
+        """
+        return json.dumps(self, **options)
+
+    def fromJSON(cls, stream, *args, **kwargs):
+        """Deserializes JSON to Munch or any of its subclasses."""
+        def factory(d):
+            return cls(*(args + (d,)), **kwargs)
+        return munchify(json.loads(stream), factory=factory)
+
+    Munch.toJSON = toJSON
+    Munch.fromJSON = classmethod(fromJSON)
+
+except ImportError:
+    pass
+
+
+try:
+    # Attempt to register ourself with PyYAML as a representer
+    import yaml
+    from yaml.representer import Representer, SafeRepresenter
+
+    def from_yaml(loader, node):
+        """PyYAML support for Munches using the tag `!munch` and `!munch.Munch`.
+
+        >>> import yaml
+        >>> yaml.load('''
+        ... Flow style: !munch.Munch { Clark: Evans, Brian: Ingerson, Oren: Ben-Kiki }
+        ... Block style: !munch
+        ...   Clark : Evans
+        ...   Brian : Ingerson
+        ...   Oren  : Ben-Kiki
+        ... ''') #doctest: +NORMALIZE_WHITESPACE
+        {'Flow style': Munch(Brian='Ingerson', Clark='Evans', Oren='Ben-Kiki'),
+         'Block style': Munch(Brian='Ingerson', Clark='Evans', Oren='Ben-Kiki')}
+
+        This module registers itself automatically to cover both Munch and any
+        subclasses. Should you want to customize the representation of a subclass,
+        simply register it with PyYAML yourself.
+        """
+        data = Munch()
+        yield data
+        value = loader.construct_mapping(node)
+        data.update(value)
+
+    def to_yaml_safe(dumper, data):
+        """Converts Munch to a normal mapping node, making it appear as a
+        dict in the YAML output.
+
+        >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
+        >>> import yaml
+        >>> yaml.safe_dump(b, default_flow_style=True)
+        '{foo: [bar, {lol: true}], hello: 42}\\n'
+        """
+        return dumper.represent_dict(data)
+
+    def to_yaml(dumper, data):
+        """Converts Munch to a representation node.
+
+        >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
+        >>> import yaml
+        >>> yaml.dump(b, default_flow_style=True)
+        '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
+        """
+        return dumper.represent_mapping(u("!munch.Munch"), data)
+
+    for loader_name in (
+        "BaseLoader",
+        "FullLoader",
+        "SafeLoader",
+        "Loader",
+        "UnsafeLoader",
+        "DangerLoader",
+    ):
+        LoaderCls = getattr(yaml, loader_name, None)
+        if LoaderCls is None:
+            # This code supports both PyYAML 4.x and 5.x versions
+            continue
+        yaml.add_constructor(u("!munch"), from_yaml, Loader=LoaderCls)
+        yaml.add_constructor(u("!munch.Munch"), from_yaml, Loader=LoaderCls)
+
+    SafeRepresenter.add_representer(Munch, to_yaml_safe)
+    SafeRepresenter.add_multi_representer(Munch, to_yaml_safe)
+
+    Representer.add_representer(Munch, to_yaml)
+    Representer.add_multi_representer(Munch, to_yaml)
+
+    # Instance methods for YAML conversion
+    def toYAML(self, **options):
+        """Serializes this Munch to YAML, using `yaml.safe_dump()` if
+        no `Dumper` is provided. See the PyYAML documentation for more info.
+
+        >>> b = Munch(foo=['bar', Munch(lol=True)], hello=42)
+        >>> import yaml
+        >>> yaml.safe_dump(b, default_flow_style=True)
+        '{foo: [bar, {lol: true}], hello: 42}\\n'
+        >>> b.toYAML(default_flow_style=True)
+        '{foo: [bar, {lol: true}], hello: 42}\\n'
+        >>> yaml.dump(b, default_flow_style=True)
+        '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
+        >>> b.toYAML(Dumper=yaml.Dumper, default_flow_style=True)
+        '!munch.Munch {foo: [bar, !munch.Munch {lol: true}], hello: 42}\\n'
+
+        """
+        opts = dict(indent=4, default_flow_style=False)
+        opts.update(options)
+        if "Dumper" not in opts:
+            return yaml.safe_dump(self, **opts)
+        else:
+            return yaml.dump(self, **opts)
+
+    def fromYAML(cls, stream, *args, **kwargs):
+        def factory(d):
+            return cls(*(args + (d,)), **kwargs)
+        loader_class = kwargs.pop("Loader", yaml.FullLoader)
+        return munchify(yaml.load(stream, Loader=loader_class), factory=factory)
+
+    Munch.toYAML = toYAML
+    Munch.fromYAML = classmethod(fromYAML)
+
+except ImportError:
+    pass
+</file>
+
+</files>

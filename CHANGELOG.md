@@ -4,6 +4,10 @@ Changelog
 Next Version
 ------------
 
+* Add `splitnest` function for splitting dotted keys into nested dictionaries (commit fce91c3)
+* Minor updates to __init__.py (commits 6df8dd0, 1130368)
+* Auto-commit for saving local changes (commit cecddba)
+
 2.5.0 (2019-10-30)
 ------------------
 
